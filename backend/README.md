@@ -96,3 +96,38 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+---
+
+## Backend Environment Variables
+
+Copy `.env.example` to `.env` and fill credentials:
+
+```
+DATABASE_URL=postgresql://user:pass@host:5432/dbname
+JWT_ACCESS_SECRET=your_access_secret
+JWT_REFRESH_SECRET=your_refresh_secret
+ACCESS_TOKEN_EXP=15m
+REFRESH_TOKEN_EXP=7d
+FRONTEND_URL=http://localhost:3000
+NODE_ENV=development
+PORT=4000
+```
+
+---
+
+## Prisma Setup & Migration Commands
+
+Install dependencies:
+
+```
+npm install
+```
+
+Set up the DB:
+
+```
+npx prisma migrate dev --name init
+```
+
+---

@@ -1,0 +1,129 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Health Program Tracker Schema
+
+enum Role {
+  ADMIN
+  STAFF
+  GUEST
+}
+
+enum Frequency {
+  DAILY
+  WEEKLY
+  MONTHLY
+}
+
+enum SessionStatus {
+  PENDING
+  ATTENDED
+  MISSED
+  CANCELED
+}
+
+model User {
+  id         String   @id @default(cuid())
+  name       String
+  email      String   @unique
+  password   String
+  role       Role     @default(STAFF)
+  createdAt  DateTime @default(now())
+
+  activities ActivityLog[]
+  // opposite relation for Program.createdBy
+  programs   Program[] @relation("ProgramsCreated")
+  // opposite relation for MedicationRecord.collectedBy
+  medicationRecords MedicationRecord[] @relation("MedRecordsCollected")
+}
+
+model Program {
+  id           String        @id @default(cuid())
+  name         String
+  description  String?
+  isPublic     Boolean       @default(false)
+  createdById  String
+  createdBy    User          @relation("ProgramsCreated", fields: [createdById], references: [id])
+  sessions     Session[]
+  prescriptions Prescription[]
+  createdAt    DateTime      @default(now())
+}
+
+model Patient {
+  id            String         @id @default(cuid())
+  firstName     String
+  lastName      String?
+  dob           DateTime?
+  gender        String?
+  phone         String?
+  enrolledAt    DateTime       @default(now())
+  sessions      Session[]
+  prescriptions Prescription[]
+}
+
+model Session {
+  id          String        @id @default(cuid())
+  programId   String
+  program     Program       @relation(fields: [programId], references: [id])
+  patientId   String
+  patient     Patient       @relation(fields: [patientId], references: [id])
+  date        DateTime
+  status      SessionStatus @default(PENDING)
+  notes       String?
+  createdAt   DateTime      @default(now())
+}
+
+model Medication {
+  id        String   @id @default(cuid())
+  name      String
+  dose      String?
+  notes     String?
+  createdAt DateTime @default(now())
+  prescriptions Prescription[]
+}
+
+model Prescription {
+  id             String     @id @default(cuid())
+  patientId      String
+  patient        Patient    @relation(fields: [patientId], references: [id])
+  programId      String?
+  program        Program?   @relation(fields: [programId], references: [id])
+  medicationId   String
+  medication     Medication @relation(fields: [medicationId], references: [id])
+  frequency      Frequency
+  startDate      DateTime   @default(now())
+  createdAt      DateTime   @default(now())
+  records        MedicationRecord[]
+}
+
+model MedicationRecord {
+  id             String   @id @default(cuid())
+  prescriptionId String
+  prescription   Prescription @relation(fields: [prescriptionId], references: [id])
+  collectedById  String
+  collectedBy    User     @relation("MedRecordsCollected", fields: [collectedById], references: [id])
+  dateCollected  DateTime @default(now())
+  createdAt      DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  target    String?
+  details   String?
+  createdAt DateTime @default(now())
+}
